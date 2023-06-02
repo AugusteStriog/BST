@@ -1,0 +1,69 @@
+To use edgeR as a command-line tool, you can follow these steps:
+
+    Prepare your count matrix and sample metadata as described earlier, and save them as separate files. For example, you can save the count matrix as "counts.csv" and the sample metadata as "metadata.csv".
+
+    Create an R script file, for example, "differential_expression_analysis.R", and open it in a text editor.
+
+    In the R script file, load the edgeR library and include the necessary code for differential expression analysis using edgeR, similar to the steps mentioned earlier.
+
+    R
+
+library(edgeR)
+
+# Read count matrix and sample metadata
+counts <- read.csv("counts.csv", row.names = 1, header = TRUE)
+metadata <- read.csv("metadata.csv", header = TRUE)
+
+# Create DGEList object
+dge <- DGEList(counts = counts, group = metadata$condition)
+
+# Perform differential expression analysis
+dge <- calcNormFactors(dge)
+design <- model.matrix(~condition, data = metadata)
+fit <- glmQLFit(dge, design)
+results <- glmQLFTest(fit)
+
+# Adjust p-values and extract differentially expressed genes
+keep <- decideTestsDGE(results, adjust.method = "BH", p.value = 0.05)
+diffGenes <- topTags(results, n = Inf, p.value = 0.05)$table
+diffGenes <- diffGenes[keep, ]
+
+# Save the results
+write.csv(diffGenes, "differential_expression_results.csv", row.names = TRUE)
+
+Save and close the R script file.
+
+Open the command line or terminal and navigate to the directory where you saved the R script file and the input data files.
+
+Run the R script using the "Rscript" command:
+
+    Rscript differential_expression_analysis.R
+
+    This will execute the R script and perform the differential expression analysis using edgeR based on the provided count matrix and sample metadata.
+
+    The results will be saved in a file named "differential_expression_results.csv" in the same directory.
+
+Using edgeR as a command-line tool allows you to automate the analysis and integrate it into your analysis pipeline or workflows. Remember to ensure that you have R and the necessary packages (including edgeR) installed and accessible from the command line before running the script.
+
+
+Convert BAM to SAM format: BAM files are binary representations of sequencing reads aligned to a reference genome. To work with the data, you'll need to convert the BAM file to SAM format, which is a text-based representation. You can use the samtools command-line tool for this conversion:
+
+bash
+
+samtools view -h -o output.sam input.bam
+
+Extract read counts: Once you have the SAM file, you can extract read counts aligned to each gene. There are different tools available for this purpose, such as featureCounts, HTSeq, or bedtools. Here's an example using featureCounts:
+
+bash
+
+featureCounts -a annotation.gtf -o counts.txt output.sam
+
+Replace annotation.gtf with the appropriate gene annotation file for your organism. The counts.txt file will contain the read counts for each gene.
+
+Identify the gene with the highest expression: Once you have the read counts, you can identify the gene with the highest expression by simply sorting the counts in descending order. You can use command-line tools like sort to achieve this:
+
+bash
+
+sort -k 2 -nr counts.txt > sorted_counts.txt
+
+The first line of the sorted_counts.txt file will correspond to the gene with the highest expression, as it will have the highest count.
